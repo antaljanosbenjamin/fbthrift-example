@@ -15,11 +15,6 @@
 
 add_executable(
   example_server
-
-  server/EchoService.h
-  server/EchoService.cpp
-  server/ChatRoomService.h
-  server/ChatRoomService.cpp
   server/StorageService.h
   server/StorageService.cpp
   server/ExampleServer.cpp
@@ -27,43 +22,12 @@ add_executable(
 target_link_libraries(
   example_server
 
-  chatroom-cpp2
   storage-cpp2
   ${LIBGFLAGS_LIBRARY}
   ${GLOG_LIBRARIES}
 )
 install(
   TARGETS example_server
-  RUNTIME DESTINATION bin/cpp2/
-)
-
-add_executable(
-  chatroom_client
-
-  client/ChatRoomClient.cpp
-)
-target_link_libraries(
-  chatroom_client
-
-  chatroom-cpp2
-)
-install(
-  TARGETS chatroom_client
-  RUNTIME DESTINATION bin/cpp2/
-)
-
-add_executable(
-  echo_client
-
-  client/EchoClient.cpp
-)
-target_link_libraries(
-  echo_client
-
-  chatroom-cpp2
-)
-install(
-  TARGETS echo_client
   RUNTIME DESTINATION bin/cpp2/
 )
 

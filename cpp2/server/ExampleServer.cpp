@@ -14,31 +14,27 @@
  * limitations under the License.
  */
 
-#include <glog/logging.h>
+#include <cpp2/server/StorageService.h>
 #include <folly/init/Init.h>
 #include <folly/portability/GFlags.h>
+#include <thrift/lib/cpp/concurrency/ThreadManager.h>
+#include <thrift/lib/cpp/thrift_config.h>
+#include <glog/logging.h>
 #include <proxygen/httpserver/HTTPServerOptions.h>
-#include <cpp2/server/ChatRoomService.h>
-#include <cpp2/server/EchoService.h>
-#include <cpp2/server/StorageService.h>
 #include <thrift/lib/cpp2/server/ThriftProcessor.h>
 #include <thrift/lib/cpp2/server/ThriftServer.h>
 #include <thrift/lib/cpp2/transport/http2/common/HTTP2RoutingHandler.h>
 
-DEFINE_int32(chatroom_port, 7777, "Chatroom Server port");
-DEFINE_int32(echo_port, 7778, "Echo Server port");
 DEFINE_int32(storage_port, 7779, "Storage Server port");
 
 using apache::thrift::HTTP2RoutingHandler;
 using apache::thrift::ThriftServer;
 using apache::thrift::ThriftServerAsyncProcessorFactory;
-using example::chatroom::ChatRoomServiceHandler;
-using example::chatroom::EchoHandler;
 using example::storage::StorageServiceHandler;
 using proxygen::HTTPServerOptions;
 
-std::unique_ptr<HTTP2RoutingHandler> createHTTP2RoutingHandler(
-    std::shared_ptr<ThriftServer> server) {
+std::unique_ptr<HTTP2RoutingHandler>
+createHTTP2RoutingHandler(std::shared_ptr<ThriftServer> server) {
   auto h2_options = std::make_unique<HTTPServerOptions>();
   h2_options->threads = static_cast<size_t>(server->getNumIOWorkerThreads());
   h2_options->idleTimeout = server->getIdleTimeout();
@@ -57,28 +53,24 @@ std::shared_ptr<ThriftServer> newServer(int32_t port) {
   server->setPort(port);
   server->setProcessorFactory(proc_factory);
   server->addRoutingHandler(createHTTP2RoutingHandler(server));
+
+  // server->setupThreadManager();
   return server;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   FLAGS_logtostderr = 1;
   folly::init(&argc, &argv);
 
-  auto chatroom_server = newServer<ChatRoomServiceHandler>(FLAGS_chatroom_port);
-  std::thread t([&] {
-    LOG(INFO) << "ChatRoom Server running on port: " << FLAGS_chatroom_port;
-    chatroom_server->serve();
-  });
 
   auto storage_server = newServer<StorageServiceHandler>(FLAGS_storage_port);
-  std::thread t2([&] {
-    LOG(INFO) << "Storage Server running on port: " << FLAGS_storage_port;
-    storage_server->serve();
-  });
-
-  auto echo_server = newServer<EchoHandler>(FLAGS_echo_port);
-  LOG(INFO) << "Echo Server running on port: " << FLAGS_echo_port;
-  echo_server->serve();
+  std::shared_ptr<apache::thrift::concurrency::ThreadManager> threadManager(
+      apache::thrift::concurrency::PriorityThreadManager::newPriorityThreadManager(8));
+  threadManager->setNamePrefix("executor");
+  threadManager->start();
+  storage_server->setThreadManager(threadManager);
+  LOG(INFO) << "Storage Server running on port: " << FLAGS_storage_port;
+  storage_server->serve();
 
   return 0;
 }

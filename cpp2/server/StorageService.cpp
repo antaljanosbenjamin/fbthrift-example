@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <glog/logging.h>
+
 #define PRINT 1
 
 #ifdef NDEBUG
@@ -15,12 +17,12 @@ void StorageServiceHandler::GetProperty(
       PropertyValue& resp,
       std::unique_ptr<PropertyRequest> req) {
 #if PRINT
-    std::cout << "Request received " << req->get_name() << '\n';
+    LOG(INFO) << "Request received " << req->get_name() << std::endl;
 #endif
     resp.set_string_v("Property name " + req->get_name());
 
 #if PRINT
-    std::cout << "Sending reply " << resp.get_string_v() << '\n';
+    LOG(INFO) << "Sending reply " << resp.get_string_v() << std::endl;
 #endif
 }
 
@@ -35,7 +37,7 @@ void StorageServiceHandler::GetPropertyStream(
         return  kDefaultMessageCount;
     }();
 #if PRINT
-    std::cout << "Request received " << req->get_name() << ", sending " << expected_message_count << " messages\n";
+    LOG(INFO) << "Request received " << req->get_name() << ", sending " << expected_message_count << " messages" << std::endl;
 #endif
     resp.reserve(expected_message_count);
     for (auto i{0}; i < expected_message_count; ++i) {
@@ -43,7 +45,7 @@ void StorageServiceHandler::GetPropertyStream(
       last_resp.set_string_v("Property name " + req->get_name() + " #" + std::to_string(i));
 
 #if PRINT
-      std::cout << "\"Sending\" reply " << last_resp.get_string_v() << '\n';
+      LOG(INFO) << "\"Sending\" reply " << last_resp.get_string_v() << std::endl;
 #endif
     }
 }

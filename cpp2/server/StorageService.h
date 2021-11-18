@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <folly/Synchronized.h>
+#include <vector>
 
 #include <if/gen-cpp2/StorageService.h>
 
@@ -9,7 +9,7 @@ namespace example {
 namespace storage {
 
 class StorageServiceHandler : virtual public StorageServiceSvIf {
- public:
+public:
   StorageServiceHandler() = default;
 
   explicit StorageServiceHandler(int64_t /*currentTime*/)
@@ -18,11 +18,11 @@ class StorageServiceHandler : virtual public StorageServiceSvIf {
   explicit StorageServiceHandler(std::function<int64_t()> /*timeFn*/)
       : StorageServiceHandler() {}
 
-  void GetProperty(
-      PropertyValue& resp,
-      std::unique_ptr<PropertyRequest> req) override;
+  void GetProperty(PropertyValue &resp,
+                   std::unique_ptr<PropertyRequest> req) override;
 
-  void GetPropertyStream(::std::vector<PropertyValue>& resp, std::unique_ptr<PropertyRequest> req) override;
+  void GetPropertyStream(::std::vector<PropertyValue> &resp,
+                         std::unique_ptr<PropertyRequest> req) override;
 };
-} // namespace chatroom
+} // namespace storage
 } // namespace example
