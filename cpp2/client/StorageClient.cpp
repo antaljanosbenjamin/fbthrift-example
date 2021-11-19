@@ -54,11 +54,12 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  const auto start = std::chrono::high_resolution_clock::now();
   try {
     // Send a chat message via a Thrift request.
     auto getPropertyRequest = example::storage::PropertyRequest();
     getPropertyRequest.name_ref() = "first ";
-    getPropertyRequest.count_ref() = 10;
+    getPropertyRequest.count_ref() = 200;
 #if PRINT
     LOG(INFO) << "Sending...";
 #endif
@@ -100,6 +101,9 @@ int main(int argc, char *argv[]) {
   } catch (apache::thrift::transport::TTransportException &ex) {
     LOG(ERROR) << "Request failed " << ex.what();
   }
+  const auto end = std::chrono::high_resolution_clock::now();
+  std::cout << "Done: in " << std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count()
+            << " seconds\n";
 
   if (client != nullptr) {
     ioThreadPool->getEventBase()->runInEventBaseThreadAndWait(
